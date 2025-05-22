@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auto Post Carousel</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 40px; }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #222;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>📸 Post Carousel to Instagram</h1>
+  <button onclick="postNow()">Post Now</button>
+  <p id="status"></p>
+
+  <script>
+    async function postNow() {
+      const status = document.getElementById("status");
+      status.innerText = "Posting...";
+      const res = await fetch("/api/post");
+      const data = await res.json();
+      if (data.success) {
+        status.innerText = "✅ Carousel posted!";
+      } else {
+        status.innerText = "❌ Failed: " + (data.error || "Unknown error");
+      }
+    }
+  </script>
+</body>
+</html>
