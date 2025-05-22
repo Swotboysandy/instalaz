@@ -2,6 +2,12 @@ import os
 import json
 import requests
 from time import sleep
+from flask import Flask, jsonify, render_template
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Flask(__name__)
 
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 IG_USER_ID = os.getenv("IG_USER_ID")
@@ -12,7 +18,6 @@ CAPTION_STATE_FILE = "/tmp/caption_index.txt"
 IMAGE_STATE_FILE = "/tmp/image_index.json"
 
 def get_next_caption():
-    """Fetch the next caption from hosted file and track index locally."""
     try:
         res = requests.get(CAPTION_URL)
         if res.status_code != 200:
@@ -37,16 +42,13 @@ def get_next_caption():
         return f"🧠 Daily drop failed. @sandy_dumps_here ({e})"
 
 def get_next_image_pair():
-    """Return next 2 image URLs based on image_index.json tracking."""
     index = 0
     if os.path.exists(IMAGE_STATE_FILE):
         with open(IMAGE_STATE_FILE, "r") as f:
             index = json.load(f).get("last_index", 0)
 
-    file1 = f"{index}.jpg"
-    file2 = f"{index + 1}.jpg"
-    url1 = f"{BASE_URL}/{file1}?v={index}"
-    url2 = f"{BASE_URL}/{file2}?v={index + 1}"
+    url1 = f"{BASE_URL}/{index}.jpg?v={index}"
+    url2 = f"{BASE_URL}/{index + 1}.jpg?v={index + 1}"
 
     with open(IMAGE_STATE_FILE, "w") as f:
         json.dump({"last_index": index + 2}, f)
@@ -54,7 +56,6 @@ def get_next_image_pair():
     return [url1, url2]
 
 def upload_and_wait(image_url):
-    """Upload an image container and wait until processing finishes."""
     res = requests.post(
         f"https://graph.facebook.com/v19.0/{IG_USER_ID}/media",
         data={
@@ -83,7 +84,6 @@ def upload_and_wait(image_url):
     return None
 
 def publish_carousel(media_ids):
-    """Publish the final carousel to Instagram."""
     caption = get_next_caption()
     sleep(5)
     res = requests.post(
@@ -112,7 +112,12 @@ def publish_carousel(media_ids):
     print("🚀 Carousel published:", publish)
     return True
 
-def handler(request, response):
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/post", methods=["GET"])
+def post_carousel():
     try:
         media_ids = []
         image_urls = get_next_image_pair()
@@ -123,13 +128,16 @@ def handler(request, response):
                 media_ids.append(cid)
 
         if len(media_ids) != 2:
-            return response.status(400).json({"error": "Only found 1 image, need 2 for carousel."})
+            return jsonify({"error": "Only found 1 image, need 2 for carousel."}), 400
 
         success = publish_carousel(media_ids)
         if success:
-            return response.status(200).json({"success": True, "message": "Carousel posted!"})
+            return jsonify({"success": True, "message": "Carousel posted!"})
         else:
-            return response.status(500).json({"error": "Failed to publish carousel."})
+            return jsonify({"error": "Failed to publish carousel."}), 500
 
     except Exception as e:
-        return response.status(500).json({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
