@@ -1,14 +1,22 @@
 import os
 import subprocess
-from threading import Thread
+import threading
 from flask import Flask, render_template, jsonify
 
-# point Flask at your templates folder under api/
 app = Flask(__name__, template_folder="api/templates")
 
+# A simple flag + lock to prevent overlapping runs
+_run_lock = threading.Lock()
+_is_running = False
+
 def run_instagram_post():
-    # Adjust path if needed
-    subprocess.call(["python", os.path.join("api", "post.py")])
+    global _is_running
+    try:
+        # Call your unchanged posting script
+        subprocess.call(["python", os.path.join("api", "post_today.py")])
+    finally:
+        with _run_lock:
+            _is_running = False
 
 @app.route("/")
 def index():
@@ -16,8 +24,14 @@ def index():
 
 @app.route("/post", methods=["POST"])
 def post_carousel():
-    # Run in background so HTTP doesn’t block
-    Thread(target=run_instagram_post).start()
+    global _is_running
+    with _run_lock:
+        if _is_running:
+            return jsonify({"error": "A post is already in progress. Please wait."}), 429
+        _is_running = True
+
+    # Fire the job in the background
+    threading.Thread(target=run_instagram_post, daemon=True).start()
     return jsonify({"status": "started"}), 202
 
 if __name__ == "__main__":
