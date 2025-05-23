@@ -14,11 +14,25 @@
 
   <script>
     async function postNow() {
-      document.getElementById("msg").innerText = "Posting…";
-      const res = await fetch("/post", { method: "POST" });
-      const json = await res.json();
-      document.getElementById("msg").innerText = 
-        res.status === 202 ? "✅ Started!" : `❌ ${json.status || json.error}`;
+      const msg = document.getElementById("msg");
+      msg.innerText = "Posting…";
+
+      try {
+        const res = await fetch("/post", { method: "POST" });
+        const data = await res.json();
+
+        if (res.status === 202) {
+          msg.innerText = "✅ Started! Your carousel is on its way.";
+          // second confirmation after 10s
+          setTimeout(() => {
+            msg.innerText = "✅ Done! Check your Instagram feed.";
+          }, 10000);
+        } else {
+          msg.innerText = `❌ ${data.error || data.status || "Failed to start."}`;
+        }
+      } catch (err) {
+        msg.innerText = `❌ ${err.message || err}`;
+      }
     }
   </script>
 </body>
