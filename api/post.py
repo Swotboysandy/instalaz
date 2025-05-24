@@ -38,7 +38,7 @@ def get_next_image_pair():
     with open(IMAGE_STATE_FILE, "w") as f:
         json.dump({"last_index": last + 2}, f)
 
-    print("🗂️ Next images:", fn1, fn2)
+    print("Next images:", fn1, fn2)
     return [url1, url2]
 
 # ─────────────────────────────────────────────
@@ -64,7 +64,7 @@ def get_next_caption():
 
         return caption
     except Exception as e:
-        print("❌ Caption error:", e)
+        print("Caption error:", e)
         return DEFAULT_CAPTION
 
 # ─────────────────────────────────────────────
@@ -79,11 +79,11 @@ def upload_and_wait(image_url):
     )
     data = res.json()
     if res.status_code != 200 or "id" not in data:
-        print("❌ Upload failed:", image_url, data)
+        print("Upload failed:", image_url, data)
         return None
 
     cid = data["id"]
-    print(f"✅ Uploaded: {cid}")
+    print(f"Uploaded: {cid}")
 
     for _ in range(10):
         status = requests.get(
@@ -94,11 +94,11 @@ def upload_and_wait(image_url):
         if status == "FINISHED":
             return cid
         if status == "ERROR":
-            print("❌ Processing error for:", cid)
+            print("Processing error for:", cid)
             return None
         sleep(2)
 
-    print("❌ Timeout on processing:", cid)
+    print("Timeout on processing:", cid)
     return None
 
 # ─────────────────────────────────────────────
@@ -116,21 +116,21 @@ def publish_carousel(media_ids, caption):
 
     cid = creation.get("id")
     if not cid:
-        print("❌ Carousel creation failed:", creation)
+        print("Carousel creation failed:", creation)
         return False
 
     published = requests.post(
         f"https://graph.facebook.com/v19.0/{IG_USER_ID}/media_publish",
         data={"creation_id": cid, "access_token": ACCESS_TOKEN}
     ).json()
-    print("🚀 Published carousel:", published)
+    print("Published carousel:", published)
     return True
 
 # ─────────────────────────────────────────────
 def run_today():
     urls = get_next_image_pair()
     if len(urls) < 2:
-        print("⚠️ Not enough images.")
+        print("Not enough images.")
         return
 
     media_ids = []
@@ -144,7 +144,7 @@ def run_today():
     if len(media_ids) == 2:
         publish_carousel(media_ids, caption)
     else:
-        print("⚠️ Skipping: need exactly 2 media IDs, got", len(media_ids))
+        print("Skipping: need exactly 2 media IDs, got", len(media_ids))
         
-    if __name__ == "__main__":
-        run_today()
+if __name__ == "__main__":
+    run_today()
