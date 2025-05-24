@@ -145,3 +145,6 @@ def run_today():
         publish_carousel(media_ids, caption)
     else:
         print("⚠️ Skipping: need exactly 2 media IDs, got", len(media_ids))
+        
+    if __name__ == "__main__":
+        run_today()

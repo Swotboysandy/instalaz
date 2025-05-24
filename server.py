@@ -1,3 +1,6 @@
+# ─────────────────────────────────────────────
+# server.py
+# ─────────────────────────────────────────────
 import os
 import subprocess
 import threading
@@ -12,8 +15,12 @@ _is_running = False
 def run_instagram_post():
     global _is_running
     try:
-        # Call your unchanged posting script
-        subprocess.call(["python", os.path.join("api", "post.py")])
+        print("🔥 Starting Instagram post subprocess…")
+        result = subprocess.run(["python", "api/post.py"], capture_output=True, text=True)
+        print("📤 STDOUT:", result.stdout)
+        print("📥 STDERR:", result.stderr)
+    except Exception as e:
+        print("❌ Error in subprocess:", e)
     finally:
         with _run_lock:
             _is_running = False
@@ -30,7 +37,6 @@ def post_carousel():
             return jsonify({"error": "A post is already in progress. Please wait."}), 429
         _is_running = True
 
-    # Fire the job in the background
     threading.Thread(target=run_instagram_post, daemon=True).start()
     return jsonify({"status": "started"}), 202
 
