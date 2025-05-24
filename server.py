@@ -13,7 +13,7 @@ def run_instagram_post():
     global _is_running
     try:
         # Call your unchanged posting script
-        subprocess.call(["python", os.path.join("api", "post_today.py")])
+        subprocess.call(["python", os.path.join("api", "post.py")])
     finally:
         with _run_lock:
             _is_running = False
