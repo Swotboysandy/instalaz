@@ -5,6 +5,8 @@ import os
 import subprocess
 import threading
 from flask import Flask, render_template, jsonify
+import logging
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, template_folder="api/templates")
 
@@ -15,7 +17,7 @@ _is_running = False
 def run_instagram_post():
     global _is_running
     try:
-        print("🔥 Starting Instagram post subprocess…")
+        logger.info("🔥 Starting Instagram post subprocess…")
         result = subprocess.run(["python", "api/post.py"], capture_output=True, text=True)
         print("📤 STDOUT:", result.stdout)
         print("📥 STDERR:", result.stderr)
