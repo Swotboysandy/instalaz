@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Insta Bot Trigger</title>
+</head>
+<body>
+  <h2>Trigger Insta Carousel Upload</h2>
+  <button onclick="triggerBot()">Post to Instagram</button>
+  <p id="status"></p>
+
+  <script>
+    async function triggerBot() {
+      document.getElementById("status").innerText = "Processing...";
+      const res = await fetch("/run-bot");
+      const data = await res.text();
+      document.getElementById("status").innerText = data;
+    }
+  </script>
+</body>
+</html>
